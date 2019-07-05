@@ -42,13 +42,8 @@ namespace WolfReleaser.Parsers
 
             var cache = new Dictionary<string, string>();
 
-            foreach ((string line, int lineNumber) in lines.Select((s, i) => (s.Trim(), i)))
+            foreach ((string line, int lineNumber) in lines.Clean())
             {
-                if (string.IsNullOrEmpty(line))
-                {
-                    continue;
-                }
-
                 if (expect != null)
                 {
                     if (line.StartsWith(expect))

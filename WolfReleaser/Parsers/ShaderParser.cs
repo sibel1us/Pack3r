@@ -31,8 +31,8 @@ namespace WolfReleaser.Parsers
             if (line.StartsWith("implicit", CMP))
             {
                 var image = line.GetSplitPart(1);
-
                 target.ImageFiles.Add(image == "-" ? target.Name : image);
+                return this.pass;
             }
             else if (line.StartsWith("map ", CMP) || line.StartsWith("clampmap ", CMP))
             {
@@ -42,15 +42,18 @@ namespace WolfReleaser.Parsers
                     !image.Equalish("$whiteimage"))
                 {
                     target.ImageFiles.Add(image);
+                    return this.pass;
                 }
             }
             else if (line.StartsWith("animmap ", CMP))
             {
                 target.ImageFiles.AddRange(line.GetSplit().Skip(2));
+                return this.pass;
             }
             else if (line.StartsWith("videomap ", CMP))
             {
                 target.ImageFiles.Add($"video/{line.GetSplitPart(1)}");
+                return this.pass;
             }
 
             return null;
@@ -143,7 +146,7 @@ namespace WolfReleaser.Parsers
             bool inShader = false;
             var files = new List<string>();
 
-            Shader  currentShader = null;
+            Shader currentShader = null;
 
             foreach ((string line, int lineNumber) in lines.Clean().SkipComments())
             {
@@ -258,6 +261,21 @@ namespace WolfReleaser.Parsers
                         .SelectMany(s => s.ImageFiles);
 
                     images.AddRange(matches);
+                }
+            }
+
+            // Get levelshots
+            string levelshotPath = "levelshots/" + map.Name;
+
+            foreach (var shaderFile in shaderFiles)
+            {
+                var levelshot = shaderFile.Shaders
+                        .FirstOrDefault(s => s.Name.StartsWith(levelshotPath));
+
+                if (levelshot != null)
+                {
+                    images.AddRange(levelshot.ImageFiles);
+                    shaders.Add(shaderFile.FullPath);
                 }
             }
 

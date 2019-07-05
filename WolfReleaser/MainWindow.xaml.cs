@@ -27,9 +27,6 @@ namespace WolfReleaser
         {
             InitializeComponent();
 
-            var scriptParser = new MapscriptParser(@"C:\Temp\ET\map\ET\etmain\goldrush.script");
-            var parsed = scriptParser.Parse();
-
             var sw = Stopwatch.StartNew();
             var map = MapParser.ParseMap(@"C:\Temp\ET\map\ET\etmain\maps\railgun_final.map");
             var shaders = ShaderParser.ReadShaders(@"C:\Temp\ET\map\ET\etmain\scripts").ToList();

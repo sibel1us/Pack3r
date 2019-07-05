@@ -57,8 +57,8 @@ namespace WolfReleaser.Parsers
             return File.Exists(Path.ChangeExtension(map.FullPath, "script"));
         }
 
-        public MapscriptRemapShader RemapShader { get; }
-        public MapscriptPlaysound PlaySound { get; }
+        public MapscriptRemapShader RemapShader { get; } = new MapscriptRemapShader();
+        public MapscriptPlaysound PlaySound { get; } = new MapscriptPlaysound();
 
         public override bool IsEnabled
         {
@@ -73,12 +73,12 @@ namespace WolfReleaser.Parsers
             this.filepath = path;
             this.lines = File.ReadAllLines(path);
 
-            this.RemapShader = new MapscriptRemapShader();
-            this.PlaySound = new MapscriptPlaysound();
-
             this.RemapShader.PropertyChanged += this.ParserMatch_PropertyChanged;
             this.PlaySound.PropertyChanged += this.ParserMatch_PropertyChanged;
         }
+
+        public MapscriptParser(Map map)
+            : this(Path.ChangeExtension(map.FullPath, "script")) { }
 
         private void ParserMatch_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
@@ -89,9 +89,6 @@ namespace WolfReleaser.Parsers
                     new PropertyChangedEventArgs(nameof(this.IsEnabled)));
             }
         }
-
-        public MapscriptParser(Map map)
-            : this(Path.ChangeExtension(map.FullPath, "script")) { }
 
         public override Mapscript Parse()
         {

@@ -64,6 +64,9 @@
     <Compile Include="Objects\Mapscript.cs" />
     <Compile Include="Objects\Shader.cs" />
     <Compile Include="Objects\ShaderFile.cs" />
+    <Compile Include="Objects\Soundscript.cs" />
+    <Compile Include="Parsers\SoundscriptParser.cs" />
+    <Compile Include="Objects\Speakerscript.cs" />
     <Compile Include="Parsers\MapscriptParser.cs" />
     <Compile Include="Parsers\ShaderParser.cs" />
     <Page Include="MainWindow.xaml">
@@ -81,6 +84,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Parsers\MapParser.cs" />
+    <Compile Include="Parsers\SpeakerscriptParser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
