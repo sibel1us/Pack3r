@@ -9,10 +9,60 @@ using WolfReleaser.Objects;
 
 namespace WolfReleaser.Parsers
 {
+    public class ShaderTextureMatch : BaseParserMatch<Shader>
+    {
+        public override bool IsMatch(string line)
+        {
+            return line.StartsWith("map ", CMP)
+                || line.StartsWith("implicit", CMP)
+                || line.StartsWith("animmap ", CMP)
+                || line.StartsWith("clampmap ", CMP)
+                || line.StartsWith("videomap ", CMP);
+        }
+
+        public override object Process(string line, Shader target)
+        {
+            if (!this.IsEnabled || !this.IsMatch(line))
+                return null;
+
+            // implicitMap/Mask etc. is handled in an odd manner. If the line
+            // doesn't equal any other options, but still starts with "implicit",
+            // implicitMap is used.
+            if (line.StartsWith("implicit", CMP))
+            {
+                var image = line.GetSplitPart(1);
+
+                target.ImageFiles.Add(image == "-" ? target.Name : image);
+            }
+            else if (line.StartsWith("map ", CMP) || line.StartsWith("clampmap ", CMP))
+            {
+                var image = line.GetSplitPart(1);
+
+                if (!image.Equalish("$lightmap") &&
+                    !image.Equalish("$whiteimage"))
+                {
+                    target.ImageFiles.Add(image);
+                }
+            }
+            else if (line.StartsWith("animmap ", CMP))
+            {
+                target.ImageFiles.AddRange(line.GetSplit().Skip(2));
+            }
+            else if (line.StartsWith("videomap ", CMP))
+            {
+                target.ImageFiles.Add($"video/{line.GetSplitPart(1)}");
+            }
+
+            return null;
+        }
+    }
+
     public static class ShaderParser
     {
         private const StringComparison CMP = StringComparison.OrdinalIgnoreCase;
         private static string currentFile = "";
+
+        private static ShaderTextureMatch texMatch = new ShaderTextureMatch();
 
         /// <summary>
         /// Reads all shader files in the target folder.
@@ -32,13 +82,11 @@ namespace WolfReleaser.Parsers
 
             if (File.Exists(shaderlistPath))
             {
-                foreach (var line in File.ReadAllLines(shaderlistPath).Select(s => s.Trim()))
-                {
-                    if (!string.IsNullOrWhiteSpace(line) && !line.StartsWith("//"))
-                    {
-                        shaderlist.Add(line);
-                    }
-                }
+                var lines = File.ReadAllLines(shaderlistPath)
+                    .Select(s => s.Trim())
+                    .Where(s => s.HasValue() && !s.IsComment());
+
+                shaderlist.AddRange(lines);
             }
             else
             {
@@ -93,14 +141,12 @@ namespace WolfReleaser.Parsers
             bool inDirective = false;
 
             bool inShader = false;
-            string shaderName = "";
             var files = new List<string>();
 
-            foreach ((string line, int lineNumber) in lines.Select((s,i) => (s.Trim(), i)))
-            {
-                if (string.IsNullOrWhiteSpace(line) || line.StartsWith("//"))
-                    continue;
+            Shader  currentShader = null;
 
+            foreach ((string line, int lineNumber) in lines.Clean().SkipComments())
+            {
                 if (expect != null)
                 {
                     if (line.StartsWith(expect))
@@ -118,7 +164,11 @@ namespace WolfReleaser.Parsers
 
                 if (!inShader)
                 {
-                    shaderName = line;
+                    currentShader = new Shader
+                    {
+                        Name = line,
+                        ImageFiles = new HashSet<string>()
+                    };
                     expect = "{";
                     inShader = true;
                     continue;
@@ -134,13 +184,9 @@ namespace WolfReleaser.Parsers
                         }
                         else
                         {
-                            yield return new Shader
-                            {
-                                Name = shaderName,
-                                ImageFiles = new HashSet<string>(files)
-                            };
+                            yield return currentShader;
 
-                            shaderName = "";
+                            currentShader = null;
                             files = new List<string>();
                             inShader = false;
                             continue;
@@ -163,17 +209,7 @@ namespace WolfReleaser.Parsers
 
                     if (inDirective)
                     {
-                        if (line.StartsWith("implicit", CMP)
-                        || line.StartsWith("map ", CMP)
-                        || line.StartsWith("clampmap ", CMP))
-                        {
-                            var imageFile = line.GetSplitPart(1);
-
-                            if (!imageFile.Equalish("$lightmap"))
-                            {
-                                files.Add(imageFile == "-" ? shaderName : imageFile);
-                            }
-                        }
+                        texMatch.Process(line, currentShader);
                     }
                 }
             }
@@ -183,7 +219,7 @@ namespace WolfReleaser.Parsers
         /// Returns the required image and shader files by using a list of the map's shaders.
         /// </summary>
         public static (HashSet<string> images, HashSet<string> shaders) GetRequiredFiles(
-            MapFiles map,
+            Map map,
             IEnumerable<ShaderFile> shaderFiles)
         {
             var images = new HashSet<string>();
@@ -221,7 +257,7 @@ namespace WolfReleaser.Parsers
                         .Where(s => s.Name.StartsWith(terrain))
                         .SelectMany(s => s.ImageFiles);
 
-                    shaders.AddRange(matches);
+                    images.AddRange(matches);
                 }
             }
 

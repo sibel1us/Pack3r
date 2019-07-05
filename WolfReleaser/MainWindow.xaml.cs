@@ -13,6 +13,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using WolfReleaser.General;
 using WolfReleaser.Parsers;
 
 namespace WolfReleaser
@@ -26,11 +27,19 @@ namespace WolfReleaser
         {
             InitializeComponent();
 
+            var scriptParser = new MapscriptParser(@"C:\Temp\ET\map\ET\etmain\goldrush.script");
+            var parsed = scriptParser.Parse();
+
             var sw = Stopwatch.StartNew();
             var map = MapParser.ParseMap(@"C:\Temp\ET\map\ET\etmain\maps\railgun_final.map");
             var shaders = ShaderParser.ReadShaders(@"C:\Temp\ET\map\ET\etmain\scripts").ToList();
             var requiredFiles = ShaderParser.GetRequiredFiles(map, shaders);
             sw.Stop();
+        }
+
+        private IDictionary<string, FileSources> Catalog()
+        {
+            return null;
         }
     }
 }

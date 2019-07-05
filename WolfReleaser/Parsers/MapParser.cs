@@ -5,25 +5,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using WolfReleaser.General;
+using WolfReleaser.Objects;
 
 namespace WolfReleaser.Parsers
 {
-    public class MapFiles
-    {
-        public string Name { get; set; }
-        public string FullPath { get; set; }
-        public HashSet<string> Shaders { get; set; }
-        public HashSet<string> Models { get; set; }
-        public HashSet<string> Sounds { get; set; }
-        public HashSet<string> Terrains { get; set; }
-
-        public override string ToString()
-        {
-            return $"{this.Name} ({Shaders.Count} shaders, " +
-                $"{Models.Count} models, {Sounds.Count} models)";
-        }
-    }
-
     public static class MapParser
     {
         private enum LineStatus
@@ -31,7 +16,7 @@ namespace WolfReleaser.Parsers
             None, Entity, Brush, Patch
         }
 
-        public static MapFiles ParseMap(string mapFilePath)
+        public static Map ParseMap(string mapFilePath)
         {
             if (!File.Exists(mapFilePath))
             {
@@ -41,7 +26,7 @@ namespace WolfReleaser.Parsers
 
             IEnumerable<string> lines = File.ReadAllLines(mapFilePath);
 
-            var mapFiles = new MapFiles
+            var mapFiles = new Map
             {
                 Name = Path.GetFileNameWithoutExtension(mapFilePath),
                 FullPath = mapFilePath,

@@ -55,10 +55,16 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="General\Enums.cs" />
     <Compile Include="General\Extensions.cs" />
+    <Compile Include="General\IParser.cs" />
+    <Compile Include="General\IParserMatch.cs" />
     <Compile Include="General\Log.cs" />
+    <Compile Include="Objects\Map.cs" />
+    <Compile Include="Objects\Mapscript.cs" />
     <Compile Include="Objects\Shader.cs" />
     <Compile Include="Objects\ShaderFile.cs" />
+    <Compile Include="Parsers\MapscriptParser.cs" />
     <Compile Include="Parsers\ShaderParser.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
