@@ -30,6 +30,7 @@ namespace WolfReleaser.General
                         files.UnionWith(pk3.Entries.Select(x => new Pk3File
                         {
                             Path = x.FullName,
+                            FileSize = x.Length,
                             LastWrite = x.LastWriteTime
                         }));
                         Log.Debug($"Found {pk3.Entries.Count} files " +

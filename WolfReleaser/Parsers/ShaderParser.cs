@@ -145,7 +145,7 @@ namespace WolfReleaser.Parsers
 
             if (!inShaderList && shaderlist.Count > 0)
             {
-                Log.Warn($"{fileName}.shader in folder but not in shaderlist.txt");
+                Log.Debug($"{fileName}.shader in folder but not in shaderlist.txt");
                 shaderlist.Remove(fileName);
             }
 
@@ -233,6 +233,39 @@ namespace WolfReleaser.Parsers
                         texMatch.Process(line, currentShader);
                     }
                 }
+            }
+        }
+
+        public static void FindDuplicates(IEnumerable<ShaderFile> shaderFiles)
+        {
+            var table = new Dictionary<string, List<string>>();
+
+            foreach (var shaderFile in shaderFiles)
+            {
+                foreach (var shader in shaderFile.Shaders)
+                {
+                    if (table.ContainsKey(shader.Name))
+                    {
+                        table[shader.Name].Add(shaderFile.FileName);
+                    }
+                    else
+                    {
+                        table[shader.Name] = new List<string>
+                        {
+                            shaderFile.FileName
+                        };
+                    }
+                }
+            }
+
+            foreach (var kvp in table
+                .Where(x => x.Value.Count > 1)
+                .OrderBy(x => x.Key))
+            {
+                Log.Warn(string.Format(
+                    "Found multiple versions of shader '{0}' in files: {1}",
+                    kvp.Key,
+                    string.Join(", ", kvp.Value)));
             }
         }
 

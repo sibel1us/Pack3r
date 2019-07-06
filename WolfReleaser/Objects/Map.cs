@@ -10,6 +10,7 @@ namespace WolfReleaser.Objects
     {
         public string Name { get; set; }
         public string FullPath { get; set; }
+        public string ETMain => MapFileCollection.GetETMain(this.FullPath);
         public HashSet<string> Shaders { get; set; }
         public HashSet<string> Models { get; set; }
         public HashSet<string> Sounds { get; set; }

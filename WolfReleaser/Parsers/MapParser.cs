@@ -17,7 +17,7 @@ namespace WolfReleaser.Parsers
             None, Entity, Brush, Patch
         }
 
-        public  MapParser(string path)
+        public MapParser(string path)
         {
             this.filepath = path;
             this.lines = File.ReadAllLines(path);

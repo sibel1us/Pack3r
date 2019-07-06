@@ -51,8 +51,7 @@ namespace WolfReleaser.Objects
 
         public MapFileCollection(string mapPath)
         {
-            var etmain = Directory.GetParent(
-                Directory.GetParent(mapPath).FullName).FullName;
+            var etmain = GetETMain(mapPath);
 
             if (!etmain.EndsWith($"{Path.DirectorySeparatorChar}"))
             {
@@ -65,6 +64,11 @@ namespace WolfReleaser.Objects
             this.Validate();
 
             this.Init();
+        }
+
+        public static string GetETMain(string mapPath)
+        {
+            return Directory.GetParent(Directory.GetParent(mapPath).FullName).FullName;
         }
 
         /// <summary>
@@ -92,7 +96,8 @@ namespace WolfReleaser.Objects
             }
             else
             {
-                Log.Error($"Compiled BSP not found '{bspPath}'");
+                Log.Fatal($"Compiled BSP not found '{bspPath}'");
+                throw new FileNotFoundException("BSP not found");
             }
 
             foreach (var file in allFiles)
@@ -110,8 +115,6 @@ namespace WolfReleaser.Objects
                         file);
                 }
             }
-
-            yield break;
         }
 
         private void Init()

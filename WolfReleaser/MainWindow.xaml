@@ -15,36 +15,29 @@
     <Window.Resources>
         <local:LogColorConverter x:Key="LogColorConv"/>
         <local:LogVisibleConverter x:Key="LogVisConv"/>
+        <Style TargetType="Button">
+            <Setter Property="Margin" Value="4"/>
+            <Setter Property="Padding" Value="4"/>
+        </Style>
     </Window.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
-        <Grid.RowDefinitions>
-            <RowDefinition/>
-            <RowDefinition/>
-            <RowDefinition/>
-        </Grid.RowDefinitions>
-        <DockPanel Margin="8" Grid.RowSpan="3">
+        <DockPanel Margin="8">
             <StackPanel Orientation="Horizontal" DockPanel.Dock="Bottom">
-                <Button Margin="8"
-                        Padding="4"
-                        x:Name="CopyButton"
+                <Button x:Name="CopyButton"
                         ToolTip="Copy console text to clipboard"
                         Click="CopyButton_Click">
                     Copy
                 </Button>
-                <Button Margin="8"
-                        Padding="4"
-                        x:Name="ClearButton"
+                <Button x:Name="ClearButton"
                         ToolTip="Clear console"
                         Click="ClearButton_Click">
                     Clear
                 </Button>
-                <Button Margin="8"
-                        Padding="4"
-                        x:Name="HelpButton"
+                <Button x:Name="HelpButton"
                         ToolTip="Print help in the console"
                         Click="HelpButton_Click">
                     Help
@@ -56,12 +49,13 @@
                 <RadioButton Content="Debug (All)"
                              Checked="RadioButton_Checked"
                              VerticalAlignment="Center"
-                             Margin="0,0,12,0"/>
-                <RadioButton Content="Info"
-                             Checked="RadioButton_Checked"
-                             VerticalAlignment="Center"
                              Margin="0,0,12,0"
                              IsChecked="True"/>
+                <RadioButton Content="Info"
+                             x:Name="RadioInfo"
+                             Checked="RadioButton_Checked"
+                             VerticalAlignment="Center"
+                             Margin="0,0,12,0"/>
                 <RadioButton Content="Warning"
                              Checked="RadioButton_Checked"
                              VerticalAlignment="Center"
@@ -85,18 +79,17 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <Border BorderThickness="0,0,0,1"
-                                        BorderBrush="#222">
-                                    <TextBlock
-                                    Text="{Binding Path=Message}"
-                                    TextWrapping="Wrap"
-                                    Foreground="{Binding Path=Level,Converter={StaticResource LogColorConv}}"
-                                    FontFamily="Consolas">
-                                        <TextBlock.Visibility>
-                                            <MultiBinding Converter="{StaticResource LogVisConv}">
-                                                <Binding Path="" />
-                                                <Binding Path="LogLevel" ElementName="MainWnd"/>
-                                            </MultiBinding>
-                                        </TextBlock.Visibility>
+                                        BorderBrush="#222" Margin="4,0">
+                                    <Border.Visibility>
+                                        <MultiBinding Converter="{StaticResource LogVisConv}">
+                                            <Binding Path="" />
+                                            <Binding Path="LogLevel" ElementName="MainWnd"/>
+                                        </MultiBinding>
+                                    </Border.Visibility>
+                                    <TextBlock Text="{Binding Path=Message}"
+                                               TextWrapping="Wrap"
+                                               Foreground="{Binding Path=Level,Converter={StaticResource LogColorConv}}"
+                                               FontFamily="Consolas">
                                     </TextBlock>
                                 </Border>
                             </DataTemplate>
@@ -105,5 +98,78 @@
                 </StackPanel>
             </ScrollViewer>
         </DockPanel>
+        <StackPanel Grid.Column="1" >
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="1*"/>
+                    <RowDefinition Height="1*"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBox x:Name="MapPathTextBox"
+                     Grid.Row="0"
+                     IsReadOnly="True"
+                     VerticalContentAlignment="Center"
+                     Margin="4"
+                     Text="{Binding CurrentMap.FullPath, Mode=OneWay}"/>
+                <TextBox x:Name="EtmainTextbox"
+                     Grid.Row="1"
+                     IsReadOnly="True"
+                     VerticalContentAlignment="Center"
+                     Margin="4"
+                     Text="{Binding CurrentMap.ETMain, Mode=OneWay}"/>
+                <Button x:Name="SelectReset"
+                    Grid.Column="1"
+                    MinWidth="80"
+                    DockPanel.Dock="Right"
+                    Content="{Binding SelectResetButtonText}"
+                    Click="SelectReset_Click"/>
+                <Button x:Name="OpenContainingFolder"
+                    Grid.Column="1"
+                    Grid.Row="1"
+                    MinWidth="80"
+                    DockPanel.Dock="Right"
+                    IsEnabled="{Binding ContainingFolderButtonEnabled}"
+                    Content="Open Folder"
+                    Click="OpenContainingFolder_Click"/>
+            </Grid>
+            <Grid IsEnabled="{Binding StateReadyToScan}">
+                <Button x:Name="ButtonScanFiles"
+                        Click="ButtonScanFiles_Click">
+                    Scan files
+                </Button>
+            </Grid>
+            <Grid IsEnabled="{Binding StateReadyToPack}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="1*"/>
+                    <RowDefinition Height="1*"/>
+                </Grid.RowDefinitions>
+                <DockPanel>
+                    <Label DockPanel.Dock="Left">Pk3 location</Label>
+                    <TextBox x:Name="OutFileTextBox"
+                         VerticalContentAlignment="Center"
+                         IsReadOnly="True"
+                         Margin="4"
+                         Text="{Binding OutFilePath, Mode=OneWay}"/>
+                </DockPanel>
+                <Button x:Name="ButtonSelectOutFolder"
+                        Grid.Column="1"
+                        Click="ButtonSelectOutFolder_Click">
+                    Select target folder
+                </Button>
+                <Button x:Name="ButtonPack"
+                        Grid.Row="2"
+                        Grid.ColumnSpan="2"
+                        Click="ButtonPack_Click">
+                    Pack
+                </Button>
+            </Grid>
+        </StackPanel>
     </Grid>
 </Window>

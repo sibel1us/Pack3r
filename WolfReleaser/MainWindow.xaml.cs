@@ -19,7 +19,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
-using System.Windows.Shapes;
+using Microsoft.Win32;
 using WolfReleaser.General;
 using WolfReleaser.Objects;
 using WolfReleaser.Parsers;
@@ -29,7 +29,7 @@ namespace WolfReleaser
     public enum UIState
     {
         NeedMap = 0,
-        MissingFiles,
+        ReadyToScan,
         ReadyToPack,
         Packed,
         FatalError = int.MaxValue
@@ -40,7 +40,37 @@ namespace WolfReleaser
     /// </summary>
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
-        private bool forceClose = false;
+        private string _outpath = null;
+        private Map _map = null;
+
+        public Map CurrentMap
+        {
+            get => _map;
+            private set
+            {
+                if (_map != value)
+                {
+                    _map = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(ContainingFolderButtonEnabled));
+                }
+            }
+        }
+
+        public string OutFilePath
+        {
+            get => _outpath;
+            private set
+            {
+                if (_outpath != value)
+                {
+                    _outpath = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public MapFileCollection AllFiles { get; private set; }
 
         #region UI Bind Properties
 
@@ -71,10 +101,11 @@ namespace WolfReleaser
                     _uistate = value;
                     OnPropertyChanged();
                     OnPropertyChanged(nameof(StateNeedMap));
-                    OnPropertyChanged(nameof(StateMissingFiles));
+                    OnPropertyChanged(nameof(StateReadyToScan));
                     OnPropertyChanged(nameof(StateReadyToPack));
                     OnPropertyChanged(nameof(StatePacked));
                     OnPropertyChanged(nameof(StateFatalError));
+                    OnPropertyChanged(nameof(SelectResetButtonText));
                 }
             }
         }
@@ -82,10 +113,14 @@ namespace WolfReleaser
         public ObservableCollection<LogEntry> LogLines { get; }
 
         public bool StateNeedMap => _uistate == UIState.NeedMap;
-        public bool StateMissingFiles => _uistate == UIState.MissingFiles;
+        public bool StateReadyToScan => _uistate == UIState.ReadyToScan;
         public bool StateReadyToPack => _uistate == UIState.ReadyToPack;
         public bool StatePacked => _uistate == UIState.Packed;
         public bool StateFatalError => _uistate == UIState.FatalError;
+
+        public string SelectResetButtonText => this.StateNeedMap ? "Browse" : "Reset";
+        public bool ContainingFolderButtonEnabled
+            => (_map != null && Directory.Exists(_map.ETMain));
 
         #endregion UI Bind Properties
 
@@ -105,7 +140,8 @@ namespace WolfReleaser
 
             var ass = Assembly.GetExecutingAssembly().GetName().Version;
             Log.Info($"Pack3r Version {ass}");
-            Log.Info($"Report issues at github.com/sibel1us/Pack3r");
+            Log.Info($"Report issues at github.com/sibel1us/Pack3r, and include " +
+                "the log contents with 'All'-loglevel.");
             Log.Info($"");
         }
 
@@ -210,7 +246,9 @@ namespace WolfReleaser
         private void HelpButton_Click(object sender, RoutedEventArgs e)
         {
             if ((int)this.LogLevel > (int)LogLevel.Info)
-                this.LogLevel = LogLevel.Info;
+            {
+                this.RadioInfo.IsChecked = true;
+            }
 
             var help = new[]
             {
@@ -220,15 +258,13 @@ namespace WolfReleaser
                 "Note that files that are unneeded in the release are NOT included. You will " +
                 "have to include them yourself. This includes (but might not be limited to): " +
                 "editorimages, lightimages, misc_models",
-                "You can also choose a different release name for your map, so you don't have to " +
-                "keep renaming mapscripts and such to different beta versions.",
-                "",
-                "Note: this tool makes multiple assumptions about your folder structure:",
-                "- You have everything in their normal locations, meaning the .map file " +
+                //"You can also choose a different release name for your map, so you don't have to " +
+                //"keep renaming mapscripts and such to different beta versions.",
+                "You have everything in their normal locations, meaning the .map file " +
                 "is in etmain/maps, and that other required files (mapscripts and such) are " +
                 "in their correct folders. Put log-level to 'All' to see information about " +
                 "possible missing files.",
-                "- The program needs to have write access to %appdata% and the folder where " +
+                "The program needs to have write access to %appdata% and the folder where " +
                 "the release pk3 is packed to.",
                 "",
             };
@@ -241,10 +277,142 @@ namespace WolfReleaser
 
         private void MainWnd_Closing(object sender, CancelEventArgs e)
         {
-            if (!forceClose)
+            Log.Info("Cleaning up temporary files...");
+            FileUtil.DeleteTempData();
+        }
+
+        private void SelectReset_Click(object sender, RoutedEventArgs _)
+        {
+            if (StateNeedMap)
             {
-                Log.Info("Cleaning up temporary files...");
-                FileUtil.DeleteTempData();
+                var openFileDialog = new OpenFileDialog
+                {
+                    CheckFileExists = true,
+                    Filter = "Map Source Files (*.map)|*.map"
+                };
+
+                if (openFileDialog.ShowDialog() != true)
+                    return;
+
+                var path = openFileDialog.FileName;
+
+                try
+                {
+                    var parser = new MapParser(path);
+                    if (parser.Parse() is Map map)
+                    {
+                        this.CurrentMap = map;
+                        this.UIState = UIState.ReadyToScan;
+                    }
+                }
+                catch (Exception e)
+                {
+                    Log.Fatal($"Failed to read map: {e.Message}");
+                    Log.Debug(e.ToString());
+                    return;
+                }
+            }
+            else
+            {
+                this.UIState = UIState.NeedMap;
+                this.CurrentMap = null;
+                this.AllFiles = null;
+                this.OutFilePath = null;
+                Log.Debug("Selected map reset.");
+            }
+        }
+
+        private void OpenContainingFolder_Click(object sender, RoutedEventArgs _)
+        {
+            try
+            {
+                Process.Start(CurrentMap.ETMain);
+            }
+            catch (Exception e)
+            {
+                Log.Error($"Failed to open folder '{CurrentMap.ETMain}'");
+                Log.Debug(e.ToString());
+            }
+        }
+
+        private void ButtonScanFiles_Click(object sender, RoutedEventArgs _)
+        {
+            try
+            {
+                var shaders = ShaderParser.ReadShaders(
+                    System.IO.Path.Combine(CurrentMap.ETMain, "scripts")).ToList();
+
+                if (shaders.Count == 0)
+                    throw new Exception("Found no shaders");
+
+                this.AllFiles = new MapFileCollection(this.CurrentMap.FullPath);
+                this.UIState = UIState.ReadyToPack;
+                Log.Info("Finished analyzing files");
+            }
+            catch (Exception e)
+            {
+                this.AllFiles = null;
+                Log.Error($"Error when analyzing files: {e.Message}");
+                Log.Debug(e.ToString());
+            }
+        }
+
+        private void ButtonSelectOutFolder_Click(object sender, RoutedEventArgs _)
+        {
+            try
+            {
+                using (var dialog = new System.Windows.Forms.FolderBrowserDialog())
+                {
+                    var result = dialog.ShowDialog();
+
+                    if (result != System.Windows.Forms.DialogResult.OK)
+                        return;
+
+                    var pk3 = Path.Combine(
+                        dialog.SelectedPath,
+                        Path.ChangeExtension(CurrentMap.Name, "pk3"));
+
+                    if (!Directory.Exists(dialog.SelectedPath))
+                        throw new DirectoryNotFoundException("Directory does not exist " +
+                            $"({dialog.SelectedPath})");
+
+                    if (File.Exists(pk3))
+                        throw new Exception($"File already exists: {pk3}");
+
+                    this.OutFilePath = pk3;
+                }
+            }
+            catch (Exception e)
+            {
+                Log.Error($"Error when selecting output folder: {e.Message}");
+                Log.Debug(e.ToString());
+            }
+        }
+
+        private void ButtonPack_Click(object sender, RoutedEventArgs _)
+        {
+            try
+            {
+                var stockPk3s = new[]
+                {
+                    Path.Combine(CurrentMap.ETMain, "pak0.pk3"),
+                    Path.Combine(CurrentMap.ETMain, "pak1.pk3"),
+                    Path.Combine(CurrentMap.ETMain, "pak2.pk3")
+                };
+
+                var existingFiles = Pk3Reader.GetFiles(stockPk3s);
+
+                Pk3Packer.PackPk3(
+                    this.OutFilePath,
+                    this.AllFiles,
+                    existingFiles);
+
+                Log.Fatal($"Succesfully packed to {OutFilePath}");
+            }
+            catch (Exception e)
+            {
+                Log.Error($"Error when packing pk3: {e.Message}");
+                Log.Debug(e.ToString());
             }
         }
     }

@@ -66,7 +66,7 @@ namespace WolfReleaser.General
             {
                 try
                 {
-                    Directory.Delete(path);
+                    Directory.Delete(path, true);
                     Log.Debug($"Deleted temporary directory '{path}'");
                 }
                 catch (Exception e)

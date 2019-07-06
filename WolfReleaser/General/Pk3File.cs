@@ -9,6 +9,7 @@ namespace WolfReleaser.General
     public sealed class Pk3File
     {
         public string Path { get; set; }
+        public long FileSize { get; set; }
         public DateTimeOffset LastWrite { get; set; }
     }
 }
