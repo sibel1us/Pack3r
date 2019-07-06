@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -9,27 +10,31 @@ using WolfReleaser.Objects;
 
 namespace WolfReleaser.Parsers
 {
-    public static class MapParser
+    public class MapParser : BaseParser<Map>
     {
         private enum LineStatus
         {
             None, Entity, Brush, Patch
         }
 
-        public static Map ParseMap(string mapFilePath)
+        public  MapParser(string path)
         {
-            if (!File.Exists(mapFilePath))
+            this.filepath = path;
+            this.lines = File.ReadAllLines(path);
+        }
+
+        public override Map Parse()
+        {
+            if (!File.Exists(filepath))
             {
-                Log.Error($"Map file not found: '{mapFilePath}'");
+                Log.Error($"Map file not found: '{filepath}'");
                 return null;
             }
 
-            IEnumerable<string> lines = File.ReadAllLines(mapFilePath);
-
             var mapFiles = new Map
             {
-                Name = Path.GetFileNameWithoutExtension(mapFilePath),
-                FullPath = mapFilePath,
+                Name = Path.GetFileNameWithoutExtension(filepath),
+                FullPath = filepath,
                 Shaders = new HashSet<string>(),
                 Models = new HashSet<string>(),
                 Sounds = new HashSet<string>(),
@@ -54,7 +59,7 @@ namespace WolfReleaser.Parsers
                     else
                     {
                         Log.Error($"Expecting {expect}, got {line} " +
-                            $"in {mapFilePath} line {lineNumber}");
+                            $"in {filepath} line {lineNumber}");
                         break;
                     }
                 }
@@ -79,7 +84,7 @@ namespace WolfReleaser.Parsers
                         else
                         {
                             throw new Exception(
-                                $"Unexpected token in {mapFilePath} line {lineNumber}");
+                                $"Unexpected token in {filepath} line {lineNumber}");
                         }
                         expect = "{";
                         break;
@@ -181,7 +186,7 @@ namespace WolfReleaser.Parsers
                     }
                     case LineStatus.Patch:
                     {
-                        mapFiles.Shaders.Add(line);
+                        mapFiles.Shaders.Add("textures/" + line);
                         readUntil = "}";
                         currentState = LineStatus.Brush;
                         break;
@@ -192,7 +197,7 @@ namespace WolfReleaser.Parsers
             return mapFiles;
         }
 
-        private static string ParseValue(string line)
+        private string ParseValue(string line)
         {
             return line.Substring(line.IndexOf(' ') + 1).Replace("\"", "");
         }

@@ -8,9 +8,8 @@ using System.Threading.Tasks;
 
 namespace WolfReleaser.General
 {
-    public interface IParser<T> : INotifyPropertyChanged
+    public interface IParser<T>
     {
-        bool IsEnabled { get; }
         string FullPath { get; }
         string FileName { get; }
         IEnumerable<string> Lines { get; }
@@ -19,12 +18,8 @@ namespace WolfReleaser.General
 
     public abstract class BaseParser<T> : IParser<T>
     {
-        public abstract event PropertyChangedEventHandler PropertyChanged;
-
         protected string filepath;
         protected string[] lines;
-
-        public abstract bool IsEnabled { get; }
 
         public IEnumerable<string> Lines => this.lines;
         public string FullPath => this.filepath;

@@ -24,6 +24,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <LangVersion>default</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -55,11 +56,11 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="General\Enums.cs" />
     <Compile Include="General\Extensions.cs" />
     <Compile Include="General\IParser.cs" />
     <Compile Include="General\IParserMatch.cs" />
     <Compile Include="General\Log.cs" />
+    <Compile Include="Objects\MapFileCollection.cs" />
     <Compile Include="Objects\Map.cs" />
     <Compile Include="Objects\Mapscript.cs" />
     <Compile Include="Objects\Shader.cs" />
@@ -102,6 +103,7 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

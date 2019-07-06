@@ -50,45 +50,27 @@ namespace WolfReleaser.Parsers
 
     public class MapscriptParser : BaseParser<Mapscript>
     {
-        public override event PropertyChangedEventHandler PropertyChanged;
-
         public static bool HasScript(Map map)
         {
-            return File.Exists(Path.ChangeExtension(map.FullPath, "script"));
+            return File.Exists(GetScriptPath(map.FullPath));
+        }
+
+        public static string GetScriptPath(string mapPath)
+        {
+            return Path.ChangeExtension(mapPath, "script");
         }
 
         public MapscriptRemapShader RemapShader { get; } = new MapscriptRemapShader();
         public MapscriptPlaysound PlaySound { get; } = new MapscriptPlaysound();
 
-        public override bool IsEnabled
-        {
-            get
-            {
-                return this.RemapShader.IsEnabled || this.PlaySound.IsEnabled;
-            }
-        }
-
         public MapscriptParser(string path)
         {
             this.filepath = path;
             this.lines = File.ReadAllLines(path);
-
-            this.RemapShader.PropertyChanged += this.ParserMatch_PropertyChanged;
-            this.PlaySound.PropertyChanged += this.ParserMatch_PropertyChanged;
         }
 
         public MapscriptParser(Map map)
             : this(Path.ChangeExtension(map.FullPath, "script")) { }
-
-        private void ParserMatch_PropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            if (e.PropertyName == nameof(IParser<object>.IsEnabled))
-            {
-                PropertyChanged?.Invoke(
-                    sender,
-                    new PropertyChangedEventArgs(nameof(this.IsEnabled)));
-            }
-        }
 
         public override Mapscript Parse()
         {
@@ -99,11 +81,6 @@ namespace WolfReleaser.Parsers
                 Remaps = new HashSet<string>(),
                 Sounds = new HashSet<string>()
             };
-
-            if (!this.IsEnabled)
-            {
-                return script;
-            }
 
             foreach ((var line, var index) in this.Lines.Clean().SkipComments())
             {

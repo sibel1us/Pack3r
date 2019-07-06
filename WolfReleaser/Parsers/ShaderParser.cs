@@ -34,6 +34,7 @@ namespace WolfReleaser.Parsers
                 target.ImageFiles.Add(image == "-" ? target.Name : image);
                 return this.pass;
             }
+            // map and clampMap map normally
             else if (line.StartsWith("map ", CMP) || line.StartsWith("clampmap ", CMP))
             {
                 var image = line.GetSplitPart(1);
@@ -45,11 +46,13 @@ namespace WolfReleaser.Parsers
                     return this.pass;
                 }
             }
+            // animMap contains a list of textures after the keyword and frames-argument
             else if (line.StartsWith("animmap ", CMP))
             {
                 target.ImageFiles.AddRange(line.GetSplit().Skip(2));
                 return this.pass;
             }
+            // videomap contains video name "videomap test.roq" which resides in etmain/video/
             else if (line.StartsWith("videomap ", CMP))
             {
                 target.ImageFiles.Add($"video/{line.GetSplitPart(1)}");
@@ -62,10 +65,9 @@ namespace WolfReleaser.Parsers
 
     public static class ShaderParser
     {
-        private const StringComparison CMP = StringComparison.OrdinalIgnoreCase;
         private static string currentFile = "";
 
-        private static ShaderTextureMatch texMatch = new ShaderTextureMatch();
+        private static readonly ShaderTextureMatch texMatch = new ShaderTextureMatch();
 
         /// <summary>
         /// Reads all shader files in the target folder.
@@ -96,7 +98,7 @@ namespace WolfReleaser.Parsers
                 Log.Warn($"shaderlist.txt not found in '{scriptsFolder}'");
             }
 
-            var files = Directory.GetFiles(scriptsFolder, "*.shader");
+            var files = Directory.GetFiles(scriptsFolder, "*.shader", SearchOption.AllDirectories);
 
             if (files.Length == 0)
             {
@@ -144,8 +146,6 @@ namespace WolfReleaser.Parsers
             bool inDirective = false;
 
             bool inShader = false;
-            var files = new List<string>();
-
             Shader currentShader = null;
 
             foreach ((string line, int lineNumber) in lines.Clean().SkipComments())
@@ -159,8 +159,7 @@ namespace WolfReleaser.Parsers
                     }
                     else
                     {
-                        Log.Error($"Expecting {expect}, got {line} " +
-                            $"in {currentFile} line {lineNumber}");
+                        Log.Error($"Expecting {expect} on line {lineNumber} in {currentFile}");
                         yield break;
                     }
                 }
@@ -190,7 +189,6 @@ namespace WolfReleaser.Parsers
                             yield return currentShader;
 
                             currentShader = null;
-                            files = new List<string>();
                             inShader = false;
                             continue;
                         }
@@ -204,8 +202,7 @@ namespace WolfReleaser.Parsers
                         }
                         else
                         {
-                            Log.Error($"Bracket depth too deep in " +
-                                $"{currentFile} line {lineNumber}");
+                            Log.Error($"Bracket depth too deep in {currentFile} line {lineNumber}");
                             yield break;
                         }
                     }
@@ -223,7 +220,8 @@ namespace WolfReleaser.Parsers
         /// </summary>
         public static (HashSet<string> images, HashSet<string> shaders) GetRequiredFiles(
             Map map,
-            IEnumerable<ShaderFile> shaderFiles)
+            IEnumerable<ShaderFile> shaderFiles,
+            string etmain = null)
         {
             var images = new HashSet<string>();
             var shaders = new HashSet<string>();
@@ -247,7 +245,8 @@ namespace WolfReleaser.Parsers
 
                 if (!found)
                 {
-                    Log.Warn($"Shader {shaderName} not found in any shaders");
+                    Log.Warn($"Shader definition '{shaderName}' not found, " +
+                        $"using only texture if it exists.");
                 }
             }
 

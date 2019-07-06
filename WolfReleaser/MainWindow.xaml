@@ -5,8 +5,79 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WolfReleaser"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        x:Name="MainWnd"
+        Title="MainWindow" Height="800" Width="1200">
+    <Window.Resources>
+        <local:LogColorConverter x:Key="LogColorConv"/>
+        <local:LogVisibleConverter x:Key="LogVisConv"/>
+    </Window.Resources>
     <Grid>
-        
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <DockPanel Margin="8" Grid.RowSpan="3">
+            <Button DockPanel.Dock="Bottom"
+                    Margin="8"
+                    Width="Auto"
+                    x:Name="ClearButton"
+                    Click="ClearButton_Click">Clear</Button>
+            <StackPanel Orientation="Horizontal"
+                        DockPanel.Dock="Bottom">
+                <Label>Log level</Label>
+                <RadioButton Content="Debug (All)"
+                             Checked="RadioButton_Checked"
+                             VerticalAlignment="Center"
+                             Margin="0,0,12,0"/>
+                <RadioButton Content="Info"
+                             Checked="RadioButton_Checked"
+                             VerticalAlignment="Center"
+                             Margin="0,0,12,0"
+                             IsChecked="True"/>
+                <RadioButton Content="Warning"
+                             Checked="RadioButton_Checked"
+                             VerticalAlignment="Center"
+                             Margin="0,0,12,0"/>
+                <RadioButton Content="Error"
+                             Checked="RadioButton_Checked"
+                             VerticalAlignment="Center"
+                             Margin="0,0,12,0"/>
+                <RadioButton Content="Fatal"
+                             Checked="RadioButton_Checked"
+                             VerticalAlignment="Center"
+                             Margin="0,0,12,0"/>
+                <RadioButton Content="None"
+                             Checked="RadioButton_Checked"
+                             VerticalAlignment="Center"
+                             Margin="0,0,12,0"/>
+            </StackPanel>
+            <ScrollViewer Background="Black">
+                <StackPanel>
+                    <ItemsControl ItemsSource="{Binding LogLines, Mode=OneWay}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock
+                                    Text="{Binding Path=Message}"
+                                    TextWrapping="Wrap"
+                                    Foreground="{Binding Path=Level,Converter={StaticResource LogColorConv}}"
+                                    FontFamily="Consolas">
+                                    <TextBlock.Visibility>
+                                        <MultiBinding Converter="{StaticResource LogVisConv}">
+                                            <Binding Path="" />
+                                            <Binding Path="LogLevel" ElementName="MainWnd"/>
+                                        </MultiBinding>
+                                    </TextBlock.Visibility>
+                                </TextBlock>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
+        </DockPanel>
     </Grid>
 </Window>

@@ -31,39 +31,23 @@ namespace WolfReleaser.Parsers
 
     public class SoundscriptParser : BaseParser<Soundscript>
     {
-        public override event PropertyChangedEventHandler PropertyChanged;
-
         public SoundscriptNoise ScriptNoise { get; } = new SoundscriptNoise();
-
-        public override bool IsEnabled => this.ScriptNoise.IsEnabled;
 
         public static bool HasSoundscript(Map map)
         {
-            return File.Exists(GetSoundScriptPath(map.FullPath));
+            return File.Exists(GetScriptPath(map.FullPath));
         }
 
         public SoundscriptParser(string path)
         {
             this.filepath = path;
             this.lines = File.ReadAllLines(path);
-
-            this.ScriptNoise.PropertyChanged += this.ParserMatch_PropertyChanged;
         }
 
         public SoundscriptParser(Map map)
-            : this(GetSoundScriptPath(map.FullPath)) { }
+            : this(GetScriptPath(map.FullPath)) { }
 
-        private void ParserMatch_PropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            if (e.PropertyName == nameof(IParser<object>.IsEnabled))
-            {
-                PropertyChanged?.Invoke(
-                    sender,
-                    new PropertyChangedEventArgs(nameof(this.IsEnabled)));
-            }
-        }
-
-        private static string GetSoundScriptPath(string mapPath)
+        public static string GetScriptPath(string mapPath)
         {
             var etmain = Directory.GetParent(Path.GetDirectoryName(mapPath)).FullName;
             var sounds = Path.ChangeExtension(Path.GetFileNameWithoutExtension(mapPath), "sounds");
