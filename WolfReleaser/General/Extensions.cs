@@ -8,7 +8,7 @@ namespace WolfReleaser.General
 {
     public static class Extensions
     {
-        public static bool HasValue(this string @this) => string.IsNullOrEmpty(@this);
+        public static bool HasValue(this string @this) => !string.IsNullOrEmpty(@this);
         public static bool NotEmpty(this string @this) => !string.IsNullOrWhiteSpace(@this);
         public static bool IsComment(this string @this) => @this.StartsWith("//");
 
@@ -61,19 +61,12 @@ namespace WolfReleaser.General
             return @this.Where(s => !s.Item1.IsComment());
         }
 
-        public static int AddRange<T>(
+        public static HashSet<T> AddRange<T>(
             this HashSet<T> @this,
             IEnumerable<T> items)
         {
-            int count = 0;
-
-            foreach (var item in items)
-            {
-                if (@this.Add(item))
-                    count++;
-            }
-
-            return count;
+            @this.UnionWith(items);
+            return @this;
         }
 
         public static bool ContainsOne<T>(this IEnumerable<T> @this, T item)

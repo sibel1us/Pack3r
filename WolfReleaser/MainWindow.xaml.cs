@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
@@ -48,6 +49,10 @@ namespace WolfReleaser
         public MainWindow()
         {
             this.LogLines = new ObservableCollection<LogEntry>();
+            this.LogLines.CollectionChanged += delegate (object s, NotifyCollectionChangedEventArgs _)
+            {
+                this.ConsoleScrollViewer.ScrollToEnd();
+            };
 
             InitializeComponent();
             this.DataContext = this;
@@ -94,6 +99,11 @@ namespace WolfReleaser
                 Message = msg,
                 Level = LogLevel.Fatal
             });
+            Log.OutDebug = (msg) => LogLines.Add(new LogEntry
+            {
+                Message = msg,
+                Level = LogLevel.Debug
+            });
         }
 
         private void ClearButton_Click(object sender, RoutedEventArgs e)
@@ -125,6 +135,34 @@ namespace WolfReleaser
                     this.LogLevel = LogLevel.None;
                     break;
             }
+
+            this.ConsoleScrollViewer?.ScrollToEnd();
+        }
+
+        private void CopyButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (this.LogLevel == LogLevel.None)
+                return;
+
+            var sb = new StringBuilder();
+            var lvc = new LogVisibleConverter();
+
+            foreach (var log in this.LogLines)
+            {
+                var val = lvc.Convert(
+                    new object[] { log, LogLevel },
+                    null,
+                    null,
+                    null);
+
+                if ((Visibility)val == Visibility.Visible)
+                {
+                    sb.Append($"{log.Level}:".PadRight(7));
+                    sb.AppendLine(log.Message);
+                }
+            }
+
+            Clipboard.SetText(sb.ToString());
         }
     }
 

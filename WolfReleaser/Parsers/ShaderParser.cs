@@ -78,36 +78,56 @@ namespace WolfReleaser.Parsers
         {
             if (!Directory.Exists(scriptsFolder))
             {
-                Log.Error($"scripts-directory not found in '{scriptsFolder}'");
+                Log.Fatal($"scripts-directory not found in '{scriptsFolder}'");
                 yield break;
             }
 
-            var shaderlist = new HashSet<string>();
-            var shaderlistPath = Path.Combine(scriptsFolder, "shaderlist.txt");
+            var shaderlist = ReadShaderList(
+                Path.Combine(scriptsFolder, "shaderlist.txt"));
 
-            if (File.Exists(shaderlistPath))
-            {
-                var lines = File.ReadAllLines(shaderlistPath)
-                    .Select(s => s.Trim())
-                    .Where(s => s.HasValue() && !s.IsComment());
+            Log.Debug($"Scanning folder for shaders... '{scriptsFolder}'");
 
-                shaderlist.AddRange(lines);
-            }
-            else
-            {
-                Log.Warn($"shaderlist.txt not found in '{scriptsFolder}'");
-            }
-
-            var files = Directory.GetFiles(scriptsFolder, "*.shader", SearchOption.AllDirectories);
+            var files = Directory.GetFiles(scriptsFolder, "*.shader");
 
             if (files.Length == 0)
             {
-                Log.Error($"No .shader-files found in '{scriptsFolder}'");
+                Log.Fatal($"No .shader-files found in '{scriptsFolder}'");
+            }
+            else
+            {
+                Log.Debug($"Found {files.Length} shaders");
             }
 
             foreach (var file in files)
             {
-                yield return ReadShaderfile(file, shaderlist);
+                var parsedShader = ReadShaderfile(file, shaderlist);
+                //shaderlist.Remove(parsedShader.FileName);
+                yield return parsedShader;
+            }
+
+            // TODO: handle things like egyptsoc_lights in shaderlist
+            //foreach (var orphan in shaderlist)
+            //{
+            //    Log.Warn($"shaderlist.txt references missing shader {orphan}.shader");
+            //}
+        }
+
+        public static HashSet<string> ReadShaderList(string path)
+        {
+            if (File.Exists(path))
+            {
+                var lines = File.ReadAllLines(path)
+                    .Select(s => s.Trim())
+                    .Where(s => s.HasValue() && !s.IsComment());
+
+                var hs = new HashSet<string>(lines);
+                Log.Debug($"Found {hs.Count} shaders in shaderlist '{path}'");
+                return hs;
+            }
+            else
+            {
+                Log.Warn($"shaderlist.txt not found in '{path}'");
+                return new HashSet<string>();
             }
         }
 
@@ -125,7 +145,8 @@ namespace WolfReleaser.Parsers
 
             if (!inShaderList && shaderlist.Count > 0)
             {
-                Log.Warn($"Shader '{fileName}' not found in shaderlist");
+                Log.Warn($"{fileName}.shader in folder but not in shaderlist.txt");
+                shaderlist.Remove(fileName);
             }
 
             return new ShaderFile

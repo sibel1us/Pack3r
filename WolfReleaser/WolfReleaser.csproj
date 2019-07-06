@@ -38,6 +38,17 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.IO.Compression, Version=4.1.2.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.IO.Compression.4.3.0\lib\net46\System.IO.Compression.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.IO.Compression.FileSystem" />
+    <Reference Include="System.IO.Compression.ZipFile, Version=4.0.2.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.IO.Compression.ZipFile.4.3.0\lib\net46\System.IO.Compression.ZipFile.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -60,12 +71,14 @@
     <Compile Include="General\IParser.cs" />
     <Compile Include="General\IParserMatch.cs" />
     <Compile Include="General\Log.cs" />
+    <Compile Include="General\Pk3File.cs" />
     <Compile Include="Objects\MapFileCollection.cs" />
     <Compile Include="Objects\Map.cs" />
     <Compile Include="Objects\Mapscript.cs" />
     <Compile Include="Objects\Shader.cs" />
     <Compile Include="Objects\ShaderFile.cs" />
     <Compile Include="Objects\Soundscript.cs" />
+    <Compile Include="General\Pk3Reader.cs" />
     <Compile Include="Parsers\SoundscriptParser.cs" />
     <Compile Include="Objects\Speakerscript.cs" />
     <Compile Include="Parsers\MapscriptParser.cs" />

@@ -82,11 +82,20 @@ namespace WolfReleaser.Parsers
                 Sounds = new HashSet<string>()
             };
 
+            Log.Debug($"Reading {this.lines.Length} lines in " +
+                $"mapscript for {script.MapName}");
+
             foreach ((var line, var index) in this.Lines.Clean().SkipComments())
             {
                 _ = this.RemapShader.Process(line, script) ??
                     this.PlaySound.Process(line, script);
             }
+
+            Log.Debug(string.Format(
+                "Found {0} remapshaders and {1} playsounds in mapscript for {2}",
+                script.Remaps.Count,
+                script.Sounds.Count,
+                script.MapName));
 
             return script;
         }

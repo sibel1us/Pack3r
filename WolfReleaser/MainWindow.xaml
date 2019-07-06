@@ -22,11 +22,15 @@
             <RowDefinition/>
         </Grid.RowDefinitions>
         <DockPanel Margin="8" Grid.RowSpan="3">
-            <Button DockPanel.Dock="Bottom"
-                    Margin="8"
-                    Width="Auto"
-                    x:Name="ClearButton"
+            <StackPanel Orientation="Horizontal" DockPanel.Dock="Bottom">
+                <Button Margin="8"
+                        x:Name="CopyButton"
+                        Click="CopyButton_Click">
+                    Copy
+                </Button>
+                <Button Margin="8" Width="Auto" x:Name="ClearButton"
                     Click="ClearButton_Click">Clear</Button>
+            </StackPanel>
             <StackPanel Orientation="Horizontal"
                         DockPanel.Dock="Bottom">
                 <Label>Log level</Label>
@@ -56,7 +60,7 @@
                              VerticalAlignment="Center"
                              Margin="0,0,12,0"/>
             </StackPanel>
-            <ScrollViewer Background="Black">
+            <ScrollViewer Background="Black" x:Name="ConsoleScrollViewer">
                 <StackPanel>
                     <ItemsControl ItemsSource="{Binding LogLines, Mode=OneWay}">
                         <ItemsControl.ItemTemplate>

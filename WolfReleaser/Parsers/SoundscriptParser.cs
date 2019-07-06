@@ -44,6 +44,21 @@ namespace WolfReleaser.Parsers
             this.lines = File.ReadAllLines(path);
         }
 
+        public static SoundscriptParser TryInitialize(Map map)
+        {
+            string path = GetScriptPath(map.FullPath);
+
+            if (File.Exists(path))
+            {
+                return new SoundscriptParser(path);
+            }
+            else
+            {
+                Log.Debug($"Soundscript not found in '{path}'");
+                return null;
+            }
+        }
+
         public SoundscriptParser(Map map)
             : this(GetScriptPath(map.FullPath)) { }
 
@@ -63,10 +78,15 @@ namespace WolfReleaser.Parsers
                 Sounds = new HashSet<string>()
             };
 
+            Log.Debug($"Reading {this.lines.Length} lines in soundscript " +
+                $"for {script.MapName}");
+
             foreach ((string line, int lineNumber) in lines.Clean().SkipComments())
             {
                 this.ScriptNoise.Process(line, script);
             }
+
+            Log.Debug($"Found {script.Sounds.Count} sounds in soundscript for {script.MapName}");
 
             return script;
         }

@@ -27,11 +27,11 @@ namespace WolfReleaser.Parsers
         {
             if (!File.Exists(filepath))
             {
-                Log.Error($"Map file not found: '{filepath}'");
+                Log.Fatal($"Map file not found: '{filepath}'");
                 return null;
             }
 
-            var mapFiles = new Map
+            var map = new Map
             {
                 Name = Path.GetFileNameWithoutExtension(filepath),
                 FullPath = filepath,
@@ -46,6 +46,8 @@ namespace WolfReleaser.Parsers
             string readUntil = null;
 
             var cache = new Dictionary<string, string>();
+
+            Log.Debug($"Reading {lines.Length} lines in map {map.Name}");
 
             foreach ((string line, int lineNumber) in lines.Clean())
             {
@@ -100,7 +102,7 @@ namespace WolfReleaser.Parsers
                             {
                                 if (classname == "misc_gamemodel" && cache.ContainsKey("model"))
                                 {
-                                    mapFiles.Models.Add(cache["model"]);
+                                    map.Models.Add(cache["model"]);
                                 }
 
                                 if (cache.ContainsKey("shader"))
@@ -110,17 +112,17 @@ namespace WolfReleaser.Parsers
                                     if (cache.TryGetValue("terrain", out string isTerrain) &&
                                         isTerrain.Equalish("1"))
                                     {
-                                        mapFiles.Terrains.Add("textures/" + cache["shader"]);
+                                        map.Terrains.Add("textures/" + cache["shader"]);
                                     }
                                     else
                                     {
-                                        mapFiles.Shaders.Add(cache["shader"]);
+                                        map.Shaders.Add(cache["shader"]);
                                     }
                                 }
                             }
                             else
                             {
-                                Log.Warn($"Entity without classname on line {lineNumber}");
+                                Log.Warn($"Entity without classname, line {lineNumber}");
                             }
 
 
@@ -146,11 +148,11 @@ namespace WolfReleaser.Parsers
                             }
                             else if (line.StartsWith("\"noise\"") || line.StartsWith("\"sound\""))
                             {
-                                mapFiles.Sounds.Add(ParseValue(line));
+                                map.Sounds.Add(ParseValue(line));
                             }
                             else if (line.StartsWith("\"_fog\""))
                             {
-                                mapFiles.Shaders.Add(ParseValue(line));
+                                map.Shaders.Add(ParseValue(line));
                             }
                             else if (line.StartsWith("\"shader\""))
                             {
@@ -158,7 +160,7 @@ namespace WolfReleaser.Parsers
                             }
                             else if (line.StartsWith("\"_remap\""))
                             {
-                                mapFiles.Shaders.Add(ParseValue(line).Split(';').Last());
+                                map.Shaders.Add(ParseValue(line).Split(';').Last());
                             }
                             else if (line.StartsWith("\"terrain\""))
                             {
@@ -180,13 +182,13 @@ namespace WolfReleaser.Parsers
                         }
                         else
                         {
-                            mapFiles.Shaders.Add("textures/" + line.GetSplitPart(15));
+                            map.Shaders.Add("textures/" + line.GetSplitPart(15));
                         }
                         break;
                     }
                     case LineStatus.Patch:
                     {
-                        mapFiles.Shaders.Add("textures/" + line);
+                        map.Shaders.Add("textures/" + line);
                         readUntil = "}";
                         currentState = LineStatus.Brush;
                         break;
@@ -194,7 +196,15 @@ namespace WolfReleaser.Parsers
                 }
             }
 
-            return mapFiles;
+            Log.Debug(string.Format(
+                "Found {0} shaders/terrains, {1} gamemodels, {2} sounds, in map '{4}'",
+                map.Shaders.Count,
+                map.Models.Count,
+                map.Sounds.Count,
+                map.Terrains.Count,
+                map.Name));
+
+            return map;
         }
 
         private string ParseValue(string line)

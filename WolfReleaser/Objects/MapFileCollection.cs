@@ -67,6 +67,9 @@ namespace WolfReleaser.Objects
             this.Init();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public IEnumerable<(string source, string target)> GetFiles()
         {
             var allFiles = Enumerable.Empty<string>()

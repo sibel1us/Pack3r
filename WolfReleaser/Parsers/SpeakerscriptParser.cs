@@ -47,6 +47,21 @@ namespace WolfReleaser.Parsers
         public SpeakerscriptParser(Map map)
             : this(GetScriptPath(map.FullPath)) { }
 
+        public static SpeakerscriptParser TryInitialize(Map map)
+        {
+            string path = GetScriptPath(map.FullPath);
+
+            if (File.Exists(path))
+            {
+                return new SpeakerscriptParser(path);
+            }
+            else
+            {
+                Log.Debug($"Speakerscript not found in '{path}'");
+                return null;
+            }
+        }
+
         public static string GetScriptPath(string mapPath)
         {
             var etmain = Directory.GetParent(Path.GetDirectoryName(mapPath)).FullName;
@@ -60,13 +75,18 @@ namespace WolfReleaser.Parsers
             var script = new Speakerscript
             {
                 FullPath = this.FullPath,
-                Sounds = new HashSet<string>()
+                Sounds = new HashSet<string>(),
             };
+
+            Log.Debug($"Reading {this.lines.Length} lines in speakerscript " +
+                $"for {script.MapName}");
 
             foreach ((string line, int lineNumber) in lines.Clean().SkipComments())
             {
                 this.SpeakerNoise.Process(line, script);
             }
+
+            Log.Debug($"Found {script.Sounds.Count} noises in soundscript for {script.MapName}");
 
             return script;
         }
