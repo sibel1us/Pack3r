@@ -68,6 +68,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="General\Extensions.cs" />
+    <Compile Include="General\FileUtil.cs" />
     <Compile Include="General\IParser.cs" />
     <Compile Include="General\IParserMatch.cs" />
     <Compile Include="General\Log.cs" />

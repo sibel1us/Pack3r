@@ -6,7 +6,12 @@
         xmlns:local="clr-namespace:WolfReleaser"
         mc:Ignorable="d"
         x:Name="MainWnd"
-        Title="MainWindow" Height="800" Width="1200">
+        Title="Pack3r"
+        Height="800"
+        Width="1200"
+        MinWidth="600"
+        MinHeight="400"
+        Closing="MainWnd_Closing">
     <Window.Resources>
         <local:LogColorConverter x:Key="LogColorConv"/>
         <local:LogVisibleConverter x:Key="LogVisConv"/>
@@ -24,12 +29,26 @@
         <DockPanel Margin="8" Grid.RowSpan="3">
             <StackPanel Orientation="Horizontal" DockPanel.Dock="Bottom">
                 <Button Margin="8"
+                        Padding="4"
                         x:Name="CopyButton"
+                        ToolTip="Copy console text to clipboard"
                         Click="CopyButton_Click">
                     Copy
                 </Button>
-                <Button Margin="8" Width="Auto" x:Name="ClearButton"
-                    Click="ClearButton_Click">Clear</Button>
+                <Button Margin="8"
+                        Padding="4"
+                        x:Name="ClearButton"
+                        ToolTip="Clear console"
+                        Click="ClearButton_Click">
+                    Clear
+                </Button>
+                <Button Margin="8"
+                        Padding="4"
+                        x:Name="HelpButton"
+                        ToolTip="Print help in the console"
+                        Click="HelpButton_Click">
+                    Help
+                </Button>
             </StackPanel>
             <StackPanel Orientation="Horizontal"
                         DockPanel.Dock="Bottom">
@@ -65,18 +84,21 @@
                     <ItemsControl ItemsSource="{Binding LogLines, Mode=OneWay}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <TextBlock
+                                <Border BorderThickness="0,0,0,1"
+                                        BorderBrush="#222">
+                                    <TextBlock
                                     Text="{Binding Path=Message}"
                                     TextWrapping="Wrap"
                                     Foreground="{Binding Path=Level,Converter={StaticResource LogColorConv}}"
                                     FontFamily="Consolas">
-                                    <TextBlock.Visibility>
-                                        <MultiBinding Converter="{StaticResource LogVisConv}">
-                                            <Binding Path="" />
-                                            <Binding Path="LogLevel" ElementName="MainWnd"/>
-                                        </MultiBinding>
-                                    </TextBlock.Visibility>
-                                </TextBlock>
+                                        <TextBlock.Visibility>
+                                            <MultiBinding Converter="{StaticResource LogVisConv}">
+                                                <Binding Path="" />
+                                                <Binding Path="LogLevel" ElementName="MainWnd"/>
+                                            </MultiBinding>
+                                        </TextBlock.Visibility>
+                                    </TextBlock>
+                                </Border>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
