@@ -148,31 +148,10 @@ namespace WolfReleaser
 
         private void InitConsole()
         {
-            Log.OutInfo = (msg) => LogLines.Add(new LogEntry
+            Log.Logged += delegate (object _, LogEntry entry)
             {
-                Message = msg,
-                Level = LogLevel.Info
-            });
-            Log.OutWarn = (msg) => LogLines.Add(new LogEntry
-            {
-                Message = msg,
-                Level = LogLevel.Warn
-            });
-            Log.OutError = (msg) => LogLines.Add(new LogEntry
-            {
-                Message = msg,
-                Level = LogLevel.Error
-            });
-            Log.OutFatal = (msg) => LogLines.Add(new LogEntry
-            {
-                Message = msg,
-                Level = LogLevel.Fatal
-            });
-            Log.OutDebug = (msg) => LogLines.Add(new LogEntry
-            {
-                Message = msg,
-                Level = LogLevel.Debug
-            });
+                this.LogLines.Add(entry);
+            };
         }
 
         private void ClearButton_Click(object sender, RoutedEventArgs e)
@@ -260,8 +239,8 @@ namespace WolfReleaser
                 "editorimages, lightimages, misc_models",
                 //"You can also choose a different release name for your map, so you don't have to " +
                 //"keep renaming mapscripts and such to different beta versions.",
-                "You have everything in their normal locations, meaning the .map file " +
-                "is in etmain/maps, and that other required files (mapscripts and such) are " +
+                "You must have the correct folder structure. The .map file must be in " +
+                "maps-folder in etmain, and other required files (mapscripts and such) are " +
                 "in their correct folders. Put log-level to 'All' to see information about " +
                 "possible missing files.",
                 "The program needs to have write access to %appdata% and the folder where " +

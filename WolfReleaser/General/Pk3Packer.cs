@@ -18,54 +18,64 @@ namespace WolfReleaser.General
         {
             var folder = FileUtil.NewTempFolder;
 
-            foreach ((var source, var target) in files.GetFiles())
+            var stock = new HashSet<string>(stockFiles.Select(x => x.Path));
+
+            foreach ((string source, string target) in files.GetFiles())
             {
-                var sourceFile = source;
-                var targetFile = target;
-
-                if (!File.Exists(source))
+                // If exact match found in stock files, skip
+                if (stock.Contains(target))
                 {
-                    var tga = Path.ChangeExtension(source, "tga");
-                    var jpg = Path.ChangeExtension(source, "jpg");
+                    Log.Debug($"Skipping '{target}', exists in stock pk3s.");
+                    continue;
+                }
 
-                    if (File.Exists(tga))
+                string sourceFile = null;
+                string targetFile = null;
+                string ambiguous = null;
+
+                // Exact match
+                if (File.Exists(source))
+                {
+                    sourceFile = source;
+                    targetFile = target;
+                }
+                else if (Path.GetExtension(source) == "")
+                {
+                    if (File.Exists(ambiguous = Path.ChangeExtension(source, "tga")))
                     {
                         Log.Debug($"Using found tga version for ambiguous file {target}");
-                        sourceFile = tga;
+                        sourceFile = ambiguous;
+                        targetFile = Path.ChangeExtension(target, "tga");
                     }
-                    else if (File.Exists(jpg))
+                    else if (stock.Contains(ambiguous))
+                    {
+                        Log.Debug($"TGA for ambiguous file '{target}' found in stock pk3s");
+                        continue;
+                    }
+                    else if (File.Exists(ambiguous = Path.ChangeExtension(source, "jpg")))
                     {
                         Log.Debug($"Using found jpg version for ambiguous file {target}");
-                        sourceFile = jpg;
+                        sourceFile = ambiguous;
+                        targetFile = Path.ChangeExtension(target, "jpg");
                     }
-                    else
+                    else if (stock.Contains(ambiguous))
                     {
-                        throw new FileNotFoundException(
-                            $"Can't find ambiguous file '{source}'");
+                        Log.Debug($"JPG for ambiguous file '{target}' found in stock pk3s");
+                        continue;
                     }
                 }
 
-                var stockFile = stockFiles.FirstOrDefault(x => x.Path == targetFile);
-
-                if (stockFile != null)
+                if (sourceFile == null || targetFile == null)
                 {
-                    var fi = new FileInfo(sourceFile);
-                    if (fi.Length > stockFile.FileSize)
-                    {
-                        Log.Debug($"Using version in folder of '{targetFile}', file bigger than" +
-                            $"file in pk3 ({stockFile.FileSize} vs {stockFile.FileSize}).");
-                    }
-                    else
-                    {
-                        Log.Debug($"Skipping required file '{targetFile}', " +
-                            "already exists in stock pk3s.");
-                        continue;
-                    }
+                    Log.Error($"Cannot find '{target}' in filesystem or stock pk3s.");
+                    continue;
                 }
 
                 var fullPathToTarget = Path.Combine(folder, targetFile);
                 Directory.CreateDirectory(Path.GetDirectoryName(fullPathToTarget));
                 File.Copy(sourceFile, fullPathToTarget, false);
+
+                Log.Debug($" -> {targetFile}");
             }
 
             ZipFile.CreateFromDirectory(folder, path);

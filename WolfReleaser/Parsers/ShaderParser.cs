@@ -299,6 +299,7 @@ namespace WolfReleaser.Parsers
 
                 if (!found)
                 {
+                    images.Add(shaderName);
                     Log.Warn($"Shader definition '{shaderName}' not found, " +
                         $"using only texture if it exists.");
                 }
