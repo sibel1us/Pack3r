@@ -127,7 +127,6 @@ namespace WolfReleaser.Parsers
 
 
                             cache = new Dictionary<string, string>();
-
                             continue;
                         }
                         else if (line.StartsWith("// brush"))
@@ -146,6 +145,10 @@ namespace WolfReleaser.Parsers
                             {
                                 cache["model"] = ParseValue(line);
                             }
+                            else if (line.StartsWith("\"model2\""))
+                            {
+                                map.Models.Add(ParseValue(line));
+                            }
                             else if (line.StartsWith("\"noise\"") || line.StartsWith("\"sound\""))
                             {
                                 map.Sounds.Add(ParseValue(line));
@@ -158,14 +161,20 @@ namespace WolfReleaser.Parsers
                             {
                                 cache["shader"] = ParseValue(line);
                             }
-                            else if (line.StartsWith("\"_remap\""))
+                            else if (line.StartsWith("\"_remap"))
                             {
+                                // Remaps can have suffix (_remap1, _remap2)
                                 map.Shaders.Add(ParseValue(line).Split(';').Last());
                             }
                             else if (line.StartsWith("\"terrain\""))
                             {
                                 cache["terrain"] = ParseValue(line);
                             }
+                            // TODO: skins are not supported yet!
+                            //else if (line.StartsWith("\"skin\""))
+                            //{
+                            //    map.Models.Add(ParseValue(line));
+                            //}
                         }
                         break;
                     }

@@ -85,7 +85,7 @@ namespace WolfReleaser.Parsers
             Log.Debug($"Reading {this.lines.Length} lines in " +
                 $"mapscript for {script.MapName}");
 
-            foreach ((var line, var index) in this.Lines.Clean().SkipComments())
+            foreach ((var line, var index) in this.Lines.Clean().RemoveComments())
             {
                 _ = this.RemapShader.Process(line, script) ??
                     this.PlaySound.Process(line, script);

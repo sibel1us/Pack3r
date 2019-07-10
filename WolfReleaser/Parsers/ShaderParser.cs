@@ -9,7 +9,56 @@ using WolfReleaser.Objects;
 
 namespace WolfReleaser.Parsers
 {
-    public class ShaderTextureMatch : BaseParserMatch<Shader>
+    public class SunShaderMatch : BaseParserMatch<Shader>
+    {
+        public override bool IsMatch(string line)
+        {
+            return line.StartsWith("sunshader ");
+        }
+
+        public override object Process(string line, Shader target)
+        {
+            if (this.IsEnabled && this.IsMatch(line))
+            {
+                target.ShaderReferences.Add(line.GetSplitPart(1));
+                return this.pass;
+            }
+
+            return null;
+        }
+    }
+
+    public class ShaderSkyparmsMatch : BaseParserMatch<Shader>
+    {
+        public override bool IsMatch(string line)
+        {
+            return line.StartsWith("skyparms ", CMP);
+        }
+
+        public override object Process(string line, Shader target)
+        {
+            if (this.IsEnabled && this.IsMatch(line))
+            {
+                var skyShader = line.GetSplitPart(1);
+
+                if (skyShader == "-")
+                    skyShader = target.Name;
+
+                target.ImageFiles.Add($"{skyShader}_bk");
+                target.ImageFiles.Add($"{skyShader}_dn");
+                target.ImageFiles.Add($"{skyShader}_ft");
+                target.ImageFiles.Add($"{skyShader}_up");
+                target.ImageFiles.Add($"{skyShader}_rt");
+                target.ImageFiles.Add($"{skyShader}_lf");
+
+                return this.pass;
+            }
+
+            return null;
+        }
+    }
+
+    public class TextureMapMatch : BaseParserMatch<Shader>
     {
         public override bool IsMatch(string line)
         {
@@ -67,7 +116,9 @@ namespace WolfReleaser.Parsers
     {
         private static string currentFile = "";
 
-        private static readonly ShaderTextureMatch texMatch = new ShaderTextureMatch();
+        private static readonly TextureMapMatch texMatch = new TextureMapMatch();
+        private static readonly ShaderSkyparmsMatch skyMatch = new ShaderSkyparmsMatch();
+        private static readonly SunShaderMatch sunMatch = new SunShaderMatch();
 
         /// <summary>
         /// Reads all shader files in the target folder.
@@ -117,8 +168,9 @@ namespace WolfReleaser.Parsers
             if (File.Exists(path))
             {
                 var lines = File.ReadAllLines(path)
+                    .RemoveComments()
                     .Select(s => s.Trim())
-                    .Where(s => s.HasValue() && !s.IsComment());
+                    .Where(s => s.HasValue());
 
                 var hs = new HashSet<string>(lines);
                 Log.Debug($"Found {hs.Count} shaders in shaderlist '{path}'");
@@ -169,7 +221,7 @@ namespace WolfReleaser.Parsers
             bool inShader = false;
             Shader currentShader = null;
 
-            foreach ((string line, int lineNumber) in lines.Clean().SkipComments())
+            foreach ((string line, int lineNumber) in lines.Clean().RemoveComments())
             {
                 if (expect != null)
                 {
@@ -190,7 +242,8 @@ namespace WolfReleaser.Parsers
                     currentShader = new Shader
                     {
                         Name = line,
-                        ImageFiles = new HashSet<string>()
+                        ImageFiles = new HashSet<string>(),
+                        ShaderReferences = new HashSet<string>(),
                     };
                     expect = "{";
                     inShader = true;
@@ -230,7 +283,9 @@ namespace WolfReleaser.Parsers
 
                     if (inDirective)
                     {
-                        texMatch.Process(line, currentShader);
+                        _ = texMatch.Process(line, currentShader) ??
+                            skyMatch.Process(line, currentShader) ??
+                            sunMatch.Process(line, currentShader);
                     }
                 }
             }
@@ -274,8 +329,7 @@ namespace WolfReleaser.Parsers
         /// </summary>
         public static (HashSet<string> images, HashSet<string> shaders) GetRequiredFiles(
             Map map,
-            IEnumerable<ShaderFile> shaderFiles,
-            string etmain = null)
+            IEnumerable<ShaderFile> shaderFiles)
         {
             var images = new HashSet<string>();
             var shaders = new HashSet<string>();

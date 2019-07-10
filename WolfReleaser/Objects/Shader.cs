@@ -10,10 +10,12 @@ namespace WolfReleaser.Objects
     {
         public string Name { get; set; }
         public HashSet<string> ImageFiles { get; set; }
+        public HashSet<string> ShaderReferences { get; set; }
 
         public override string ToString()
         {
-            return $"{this.Name} ({this.ImageFiles.Count} images)";
+            return $"{this.Name} ({this.ImageFiles.Count} images, " +
+                $"{this.ShaderReferences.Count} references)";
         }
     }
 }

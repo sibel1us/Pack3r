@@ -81,7 +81,7 @@ namespace WolfReleaser.Parsers
             Log.Debug($"Reading {this.lines.Length} lines in speakerscript " +
                 $"for {script.MapName}");
 
-            foreach ((string line, int lineNumber) in lines.Clean().SkipComments())
+            foreach ((string line, int lineNumber) in lines.Clean().RemoveComments())
             {
                 this.SpeakerNoise.Process(line, script);
             }

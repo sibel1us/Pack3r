@@ -38,8 +38,8 @@ namespace WolfReleaser.General
         public static bool Equalish(this string @this, string other)
         {
             return string.Equals(
-                @this?.Trim(),
-                other?.Trim(),
+                @this?.Trim() ?? "",
+                other?.Trim() ?? "",
                 StringComparison.OrdinalIgnoreCase);
         }
 
@@ -49,16 +49,49 @@ namespace WolfReleaser.General
             return @this.Where(s => s.NotEmpty()).Select((s, i) => (s.Trim(), i));
         }
 
-        public static IEnumerable<string> SkipComments(
+        public static IEnumerable<string> RemoveComments(
             this IEnumerable<string> @this)
         {
-            return @this.Where(s => !s.IsComment());
+            foreach (string line in @this)
+            {
+                if (RemoveComment(line) is string noComment)
+                {
+                    yield return noComment;
+                }
+            }
         }
 
-        public static IEnumerable<(string, int)> SkipComments(
+        public static IEnumerable<(string, int)> RemoveComments(
             this IEnumerable<(string, int)> @this)
         {
-            return @this.Where(s => !s.Item1.IsComment());
+            foreach ((string line, int lineNumber) in @this)
+            {
+                if (RemoveComment(line) is string noComment)
+                {
+                    yield return (noComment, lineNumber);
+                }
+            }
+        }
+
+        private static string RemoveComment(string line)
+        {
+            int commentIndex = line.IndexOf("//");
+
+            if (commentIndex == -1)
+            {
+                return line;
+            }
+            else
+            {
+                var noComment = line.Substring(0, commentIndex).Trim();
+
+                if (noComment.NotEmpty())
+                {
+                    return noComment;
+                }
+            }
+
+            return null;
         }
 
         public static HashSet<T> AddRange<T>(
