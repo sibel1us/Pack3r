@@ -31,7 +31,6 @@ namespace WolfReleaser.General
 
                 string sourceFile = null;
                 string targetFile = null;
-                string ambiguous = null;
 
                 // Exact match
                 if (File.Exists(source))
@@ -39,28 +38,32 @@ namespace WolfReleaser.General
                     sourceFile = source;
                     targetFile = target;
                 }
-                else if (Path.GetExtension(source) == "")
+                else if (Path.GetExtension(source) == "" ||
+                    Path.GetExtension(source) == ".tga" ||
+                    Path.GetExtension(source) == ".jpg")
                 {
+                    string ambiguous = null;
+
                     if (File.Exists(ambiguous = Path.ChangeExtension(source, "tga")))
                     {
-                        Log.Debug($"Using found tga version for ambiguous file {target}");
+                        Log.Debug($"Using found tga version for file {target}");
                         sourceFile = ambiguous;
                         targetFile = Path.ChangeExtension(target, "tga");
                     }
                     else if (stock.Contains(ambiguous))
                     {
-                        Log.Debug($"TGA for ambiguous file '{target}' found in stock pk3s");
+                        Log.Debug($"TGA for missing file '{target}' found in stock pk3s");
                         continue;
                     }
                     else if (File.Exists(ambiguous = Path.ChangeExtension(source, "jpg")))
                     {
-                        Log.Debug($"Using found jpg version for ambiguous file {target}");
+                        Log.Debug($"Using found jpg version for file {target}");
                         sourceFile = ambiguous;
                         targetFile = Path.ChangeExtension(target, "jpg");
                     }
                     else if (stock.Contains(ambiguous))
                     {
-                        Log.Debug($"JPG for ambiguous file '{target}' found in stock pk3s");
+                        Log.Debug($"JPG for missing file '{target}' found in stock pk3s");
                         continue;
                     }
                 }

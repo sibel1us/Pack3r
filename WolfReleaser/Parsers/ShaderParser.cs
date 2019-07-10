@@ -118,7 +118,7 @@ namespace WolfReleaser.Parsers
 
         private static readonly TextureMapMatch texMatch = new TextureMapMatch();
         private static readonly ShaderSkyparmsMatch skyMatch = new ShaderSkyparmsMatch();
-        private static readonly SunShaderMatch sunMatch = new SunShaderMatch();
+        //private static readonly SunShaderMatch sunMatch = new SunShaderMatch();
 
         /// <summary>
         /// Reads all shader files in the target folder.
@@ -283,9 +283,12 @@ namespace WolfReleaser.Parsers
 
                     if (inDirective)
                     {
-                        _ = texMatch.Process(line, currentShader) ??
-                            skyMatch.Process(line, currentShader) ??
-                            sunMatch.Process(line, currentShader);
+                        texMatch.Process(line, currentShader);
+                            //?? sunMatch.Process(line, currentShader);
+                    }
+                    else
+                    {
+                        skyMatch.Process(line, currentShader);
                     }
                 }
             }
